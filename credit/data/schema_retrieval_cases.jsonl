@@ -1,0 +1,5 @@
+{"case_id":"base-table-lookup","query":"FTM_AGT_LOAN表结构","expected":["schema:base:FTM_AGT_LOAN"],"expected_kinds":["schema_table"],"token":"demo-analyst","forbidden":[]}
+{"case_id":"field-type-lookup","query":"FTM_AGT_LOAN的LOAN_NO字段类型","expected":["schema:base:FTM_AGT_LOAN:LOAN_NO"],"expected_kinds":["schema_field"],"token":"demo-operator","forbidden":[]}
+{"case_id":"base-and-source-table","query":"借据表有哪些字段","expected":["schema:base:FTM_AGT_LOAN","schema:donghua_source:LN_DUE"],"expected_kinds":["schema_table"],"token":"demo-analyst","forbidden":[]}
+{"case_id":"crosswalk-lookup","query":"FTM_AGT_LOAN对应东华源表","expected":["schema:base:FTM_AGT_LOAN"],"expected_kinds":["schema_table"],"token":"demo-analyst","forbidden":[]}
+{"case_id":"visitor-schema-acl","query":"FTM_AGT_LOAN表结构","expected":[],"token":"demo-visitor","forbidden":["schema:base:FTM_AGT_LOAN"]}

@@ -1,0 +1,29 @@
+{
+  "version": "demo-v2",
+  "updated_at": "2026-09-20T22:00:00+08:00",
+  "effective_from": "2026-09-20T22:00:00+08:00",
+  "source": "合成信贷指标认证目录，仅用于本地演练",
+  "metrics": [
+    {"id":"application_count","name":"申请笔数","aliases":["申请数量","新增申请数","进件量"],"definition":"业务日新增申请事件数，按 application_id 去重；每日事件不得跨日重复。","expression":"SUM(application_count)","unit":"笔","roles":["analyst","operator","visitor"],"realtime":false,"time_kind":"flow","columns":["application_count"],"lineage":["bundle.applications","dwd_application","dws_credit_daily","ads_credit_daily"]},
+    {"id":"approved_count","name":"审批通过笔数","aliases":["通过笔数","批准申请数","批准笔数"],"definition":"业务日新增申请中 approved=true 的笔数；本样例按申请日归属。","expression":"SUM(approved_count)","unit":"笔","roles":["analyst","operator"],"realtime":false,"time_kind":"flow","columns":["approved_count"],"lineage":["bundle.applications.approved","dwd_application","dws_credit_daily","ads_credit_daily"]},
+    {"id":"approval_rate","name":"申请通过率","aliases":["审批通过率","通过率"],"definition":"同一统计范围内通过申请笔数 / 申请笔数；分母为零返回 null；跨日按分子分母重新汇总，不平均每日比率。","expression":"1.0 * SUM(approved_count) / NULLIF(SUM(application_count), 0)","unit":"比例","roles":["analyst","operator","visitor"],"realtime":false,"time_kind":"flow","columns":["approved_count","application_count"],"lineage":["bundle.applications","dwd_application","dws_credit_daily","ads_credit_daily"]},
+    {"id":"loan_balance","name":"贷款余额","aliases":["在贷余额","剩余本金","贷款本金余额"],"definition":"业务日末借据剩余本金之和；底层整数分，查询转元；属于时点指标，多日查询必须保留日期维度。","expression":"SUM(loan_balance_cents) / 100.0","unit":"元","roles":["analyst","operator","visitor"],"realtime":true,"time_kind":"stock","columns":["loan_balance_cents"],"lineage":["bundle.loans.balance_cents","dwd_loan_snapshot","dws_credit_daily","ads_credit_daily"]},
+    {"id":"overdue_balance","name":"逾期余额","aliases":["逾期本金"],"definition":"业务日末逾期本金之和；不含利息罚息；样例要求逾期本金不超过剩余本金。","expression":"SUM(overdue_balance_cents) / 100.0","unit":"元","roles":["analyst"],"realtime":true,"time_kind":"stock","columns":["overdue_balance_cents"],"lineage":["bundle.loans.overdue_cents","dwd_loan_snapshot","dws_credit_daily","ads_credit_daily"]},
+    {"id":"overdue_rate","name":"逾期率","aliases":["金额逾期率"],"definition":"业务日末逾期本金 / 剩余本金；不是笔数逾期率、M1+ 或不良率；分母为零返回 null。","expression":"1.0 * SUM(overdue_balance_cents) / NULLIF(SUM(loan_balance_cents), 0)","unit":"比例","roles":["analyst"],"realtime":true,"time_kind":"stock","columns":["overdue_balance_cents","loan_balance_cents"],"lineage":["bundle.loans","dwd_loan_snapshot","dws_credit_daily","ads_credit_daily"]},
+    {"id":"repayment_amount","name":"还款金额","aliases":["回款金额","累计回款","收回本金","已还本金"],"definition":"业务日已入账还款事件的本金合计，按 repayment_id 去重；不含冲正、撤销、利息和罚息。","expression":"SUM(repayment_cents) / 100.0","unit":"元","roles":["analyst","operator"],"realtime":false,"time_kind":"flow","columns":["repayment_cents"],"lineage":["bundle.repayments","dwd_repayment","dws_credit_daily","ads_credit_daily"]},
+    {"id":"loan_count","name":"在贷笔数","aliases":["贷款笔数"],"definition":"业务日末借据快照记录数；样例包含零余额借据，不能直接解释为活跃贷款客户数。","expression":"SUM(loan_count)","unit":"笔","roles":["analyst","operator"],"realtime":true,"time_kind":"stock","columns":["loan_count"],"lineage":["bundle.loans","dwd_loan_snapshot","dws_credit_daily","ads_credit_daily"]}
+  ],
+  "fields": [
+    {"id":"biz_date","name":"业务日期","definition":"业务发生或快照归属日期，格式 YYYY-MM-DD；不是加载时间。","roles":["analyst","operator"]},
+    {"id":"product","name":"产品","definition":"认证维度：consumer=消费贷，business=经营贷。","roles":["analyst","operator"]},
+    {"id":"domain","name":"数据域","definition":"服务端身份控制的数据范围，客户端不得自行授予。","roles":["analyst","operator"]},
+    {"id":"loan_balance_cents","name":"贷款余额字段","definition":"业务日末贷款本金，整数分。","roles":["analyst","operator"]},
+    {"id":"overdue_balance_cents","name":"逾期余额字段","definition":"业务日末逾期本金，整数分。","roles":["analyst"]},
+    {"id":"approved_count","name":"通过笔数字段","definition":"申请日维度 approved=true 事件数。","roles":["analyst","operator"]},
+    {"id":"application_count","name":"申请笔数字段","definition":"业务日新增申请事件数。","roles":["analyst","operator"]},
+    {"id":"repayment_cents","name":"还款金额字段","definition":"已入账还款本金，整数分。","roles":["analyst","operator"]},
+    {"id":"source_batch","name":"来源批次","definition":"已通过质量门禁的原始批次 ID；实时结果则为 event-stream。","roles":["analyst","operator"]},
+    {"id":"published_at","name":"发布时间","definition":"数据发布的 UTC 时间。","roles":["analyst","operator"]},
+    {"id":"data_status","name":"数据状态","definition":"FINAL 用于正式分析，REALTIME 用于监控，不相互代替。","roles":["analyst","operator"]}
+  ]
+}

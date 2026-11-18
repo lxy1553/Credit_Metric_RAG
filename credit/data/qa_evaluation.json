@@ -1,0 +1,408 @@
+[
+  {
+    "id": "S01",
+    "question": "当前认证指标目录版本是什么？",
+    "standard_answer": "当前认证指标目录版本为 demo-v2，更新时间为 2026-09-20T22:00:00+08:00。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/version, #/updated_at"}],
+    "capability_labels": ["factual_query"], "intent_labels": ["catalog_lookup"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S02",
+    "question": "申请通过率的认证口径是什么？",
+    "standard_answer": "同一统计范围内通过申请笔数除以申请笔数；分母为零返回 null；跨日应汇总分子与分母后重算，不能平均每日比率。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=approval_rate]"}],
+    "capability_labels": ["definition_explanation"], "intent_labels": ["definition"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S03",
+    "question": "逾期率按认证口径怎么算？",
+    "standard_answer": "业务日末逾期本金除以剩余本金；分母为零返回 null。它不是笔数逾期率、M1+ 或不良率。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]"}],
+    "capability_labels": ["definition_explanation"], "intent_labels": ["definition"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S04",
+    "question": "贷款余额是时点指标还是期间累计指标？",
+    "standard_answer": "贷款余额是业务日末借据剩余本金之和，属于时点指标；多日查询必须保留日期维度，不能把每日余额相加成期间总额。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]"}],
+    "capability_labels": ["factual_query", "definition_explanation"], "intent_labels": ["definition"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S05",
+    "question": "还款金额从哪些数据层流转到报表？",
+    "standard_answer": "bundle.repayments → dwd_repayment → dws_credit_daily → ads_credit_daily。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=repayment_amount]/lineage"}],
+    "capability_labels": ["lineage_trace"], "intent_labels": ["lineage"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S06",
+    "question": "FTM_AGT_LOAN 里的 LOAN_NO 是什么类型？",
+    "standard_answer": "LOAN_NO 是借据号，类型为 VARCHAR2(20)，并标记为主键。",
+    "evidence_sources": [{"source": "credit/data/schema_catalog.json", "locator": "#/tables[id=FTM_AGT_LOAN]/fields[name_en=LOAN_NO]"}],
+    "capability_labels": ["factual_query"], "intent_labels": ["schema", "field"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S07",
+    "question": "FTM_COD_CORP_BASE 的主键字段是什么？",
+    "standard_answer": "主键字段为 BR_NO（合作机构编号），类型 VARCHAR2(10）。",
+    "evidence_sources": [{"source": "credit/data/schema_catalog.json", "locator": "#/tables[id=FTM_COD_CORP_BASE]/fields[name_en=BR_NO]"}],
+    "capability_labels": ["factual_query"], "intent_labels": ["schema", "field"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S08",
+    "question": "逾期率计算使用哪两个金额字段？",
+    "standard_answer": "使用 overdue_balance_cents（逾期本金分）和 loan_balance_cents（剩余本金分），按前者合计除以后者合计。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/columns, #/metrics[id=overdue_rate]/expression"}],
+    "capability_labels": ["factual_query", "definition_explanation"], "intent_labels": ["field", "definition"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S09",
+    "question": "100 笔申请中通过 60 笔，申请通过率是多少？",
+    "standard_answer": "60 ÷ 100 = 60%。按申请通过率认证口径，分子是通过申请笔数，分母是申请笔数。",
+    "evidence_sources": [{"source": "question_constraints", "locator": "用户给定 60 笔通过、100 笔申请"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=approval_rate]/expression"}],
+    "capability_labels": ["calculation_reasoning"], "intent_labels": ["calculation"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S10",
+    "question": "逾期本金 75 万、剩余本金 1000 万，逾期率是多少？",
+    "standard_answer": "75 万 ÷ 1000 万 = 7.5%。该结果仅依据题目给定数值演算；对应金额逾期率公式为逾期本金 / 剩余本金。",
+    "evidence_sources": [{"source": "question_constraints", "locator": "用户给定 750000 与 10000000"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/expression"}],
+    "capability_labels": ["calculation_reasoning"], "intent_labels": ["calculation"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S11",
+    "question": "还款金额和贷款余额都是流量指标吗？",
+    "standard_answer": "不是。还款金额是 flow（期间事件累加）；贷款余额是 stock（业务日末时点余额）。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=repayment_amount]/time_kind, #/metrics[id=loan_balance]/time_kind"}],
+    "capability_labels": ["comparison_analysis"], "intent_labels": ["definition", "compare"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S12",
+    "question": "贷款余额支持 REALTIME 查询吗？",
+    "standard_answer": "认证目录标记 loan_balance.realtime=true，因此该指标支持实时状态查询；具体数值仍需指定日期或系统支持的查询范围。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]/realtime"}],
+    "capability_labels": ["factual_query"], "intent_labels": ["query"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S13",
+    "question": "东华数据字典里有 LOAN_NO 字段吗？",
+    "standard_answer": "有。FTM_AGT_LOAN 表的 LOAN_NO 在东华来源可用性标记为 Y。",
+    "evidence_sources": [{"source": "credit/data/schema_catalog.json", "locator": "#/tables[id=FTM_AGT_LOAN]/fields[name_en=LOAN_NO]/source_availability/东华"}],
+    "capability_labels": ["factual_query"], "intent_labels": ["schema", "field"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "S14",
+    "question": "Vintage 逾期率的认证口径和血缘是什么？",
+    "standard_answer": "当前认证指标目录没有 Vintage 逾期率的认证定义或血缘，不能推定为本系统口径；请补充业务定义并走指标认证流程。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics（无 Vintage 指标条目）"}, {"source": "credit/data/exploration_metrics.json", "locator": "#/metrics[id=vintage_overdue_rate]（候选/缺条件，不是认证）"}],
+    "capability_labels": ["refusal", "definition_explanation"], "intent_labels": ["definition", "lineage", "unsupported"],
+    "difficulty": "simple", "boundary_labels": ["no_answer"], "expected_action": "refuse"
+  },
+  {
+    "id": "S15",
+    "question": "访客身份可以查逾期率吗？",
+    "standard_answer": "不可以。逾期率在认证目录中仅授权 analyst 角色；visitor 无权获取该指标内容或数值。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/roles"}, {"source": "credit/security.py", "locator": "ROLE_TOOLS and demo identity definitions"}],
+    "capability_labels": ["refusal", "factual_query"], "intent_labels": ["authorization"],
+    "difficulty": "simple", "boundary_labels": ["permission_boundary"], "expected_action": "refuse"
+  },
+  {
+    "id": "S16",
+    "question": "逾期率咋算？",
+    "standard_answer": "按认证口径，逾期率是业务日末逾期本金除以剩余本金；分母为零返回 null，且不等同于 M1+ 或不良率。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]"}],
+    "capability_labels": ["definition_explanation", "ambiguous_query"], "intent_labels": ["definition"],
+    "difficulty": "simple", "boundary_labels": ["colloquial"], "expected_action": "answer"
+  },
+  {
+    "id": "S17",
+    "question": "申请通过率怎么算，数据从哪些表来？",
+    "standard_answer": "口径是通过申请笔数 / 申请笔数；分母为零返回 null，跨日按分子分母重算。血缘为 bundle.applications → dwd_application → dws_credit_daily → ads_credit_daily。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=approval_rate]/definition, #/metrics[id=approval_rate]/lineage"}],
+    "capability_labels": ["definition_explanation", "lineage_trace", "multi_hop_reasoning"], "intent_labels": ["definition", "lineage"],
+    "difficulty": "simple", "boundary_labels": ["multi_intent"], "expected_action": "answer"
+  },
+  {
+    "id": "S18",
+    "question": "不要查数值，只告诉我逾期率的口径。",
+    "standard_answer": "只返回口径：业务日末逾期本金 / 剩余本金；分母为零返回 null。按用户明确的否定条件，不执行数值查询。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/definition"}, {"source": "question_constraints", "locator": "用户明确要求不要查数值"}],
+    "capability_labels": ["definition_explanation", "ambiguous_query"], "intent_labels": ["definition"],
+    "difficulty": "simple", "boundary_labels": ["negation"], "expected_action": "answer"
+  },
+  {
+    "id": "S19",
+    "question": "上月贷款余额是多少？",
+    "standard_answer": "需要先确认“上月”对应的具体月份，以及要月末时点余额还是每日余额序列；贷款余额是时点指标，不能将整月每日余额相加。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]/definition"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]/time_kind"}],
+    "capability_labels": ["ambiguous_query", "factual_query"], "intent_labels": ["query", "clarify"],
+    "difficulty": "simple", "boundary_labels": ["time_ambiguity"], "expected_action": "clarify",
+    "conversation_context": [{"role": "user", "question": "2026-03-02 REALTIME 贷款余额按产品查询"}],
+    "context_expectation": "相对时间不能继承上一轮日期或 REALTIME 状态；先澄清具体月份及月末/日序列"
+  },
+  {
+    "id": "S20",
+    "question": "这个本地演示的数据覆盖哪几天？",
+    "standard_answer": "本地合成数据覆盖 2025-01 至 2026-06 共 18 个月的月末快照，并保留 2026-03-01、2026-03-02 两日；不是逐日完整数据。",
+    "evidence_sources": [{"source": "README.md", "locator": "API 示例说明：本地合成数据日期范围"}],
+    "capability_labels": ["factual_query"], "intent_labels": ["catalog_lookup"],
+    "difficulty": "simple", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "M01",
+    "question": "第一天 100 笔申请通过 80 笔，第二天 50 笔申请通过 20 笔，两天合计通过率是多少？",
+    "standard_answer": "应汇总后计算：(80+20)/(100+50)=100/150≈66.67%。不能把每日通过率 80% 与 40% 做简单平均（60%）。",
+    "evidence_sources": [{"source": "question_constraints", "locator": "用户给定两日分子分母"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=approval_rate]/definition"}],
+    "capability_labels": ["calculation_reasoning", "definition_explanation"], "intent_labels": ["query", "definition"],
+    "difficulty": "medium", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "M02",
+    "question": "申请通过率的分子和分母从源头经过哪些层到 ADS？",
+    "standard_answer": "分子是申请事件中 approved=true 的通过笔数，分母是申请笔数；来源 bundle.applications，经过 dwd_application → dws_credit_daily → ads_credit_daily。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=approval_rate]/columns, #/metrics[id=approval_rate]/lineage"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=approved_count]/lineage"}],
+    "capability_labels": ["multi_hop_reasoning", "lineage_trace", "definition_explanation"], "intent_labels": ["definition", "lineage", "field"],
+    "difficulty": "medium", "boundary_labels": ["multi_intent"], "expected_action": "answer"
+  },
+  {
+    "id": "M03",
+    "question": "从原始借据到逾期率报表，经过什么链路、用了哪些字段？",
+    "standard_answer": "字段为 overdue_balance_cents 和 loan_balance_cents；数据由 bundle.loans → dwd_loan_snapshot → dws_credit_daily → ads_credit_daily 汇总，逾期率为逾期本金合计 / 剩余本金合计。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/columns, #/metrics[id=overdue_rate]/lineage, #/metrics[id=overdue_rate]/expression"}],
+    "capability_labels": ["multi_hop_reasoning", "lineage_trace", "definition_explanation"], "intent_labels": ["lineage", "field", "definition"],
+    "difficulty": "medium", "boundary_labels": ["multi_intent"], "expected_action": "answer"
+  },
+  {
+    "id": "M04",
+    "question": "比较贷款余额和还款金额的时间属性及实时支持。",
+    "standard_answer": "贷款余额是 stock 时点指标，目录标记支持 realtime；还款金额是 flow 期间事件指标，目录标记不支持 realtime。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]/time_kind, /realtime; #/metrics[id=repayment_amount]/time_kind, /realtime"}],
+    "capability_labels": ["comparison_analysis", "factual_query"], "intent_labels": ["compare", "query"],
+    "difficulty": "medium", "boundary_labels": ["multi_intent"], "expected_action": "answer"
+  },
+  {
+    "id": "M05",
+    "question": "申请通过率和逾期率的分子、分母分别是什么？",
+    "standard_answer": "申请通过率=通过申请笔数/申请笔数；逾期率=业务日末逾期本金/剩余本金。前者按申请笔数，后者按金额，不能混用分子分母。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=approval_rate]/definition; #/metrics[id=overdue_rate]/definition"}],
+    "capability_labels": ["comparison_analysis", "definition_explanation"], "intent_labels": ["compare", "definition"],
+    "difficulty": "medium", "boundary_labels": ["multi_intent"], "expected_action": "answer"
+  },
+  {
+    "id": "M06",
+    "question": "底层贷款余额是 1,234,567 分，查询应显示多少元？",
+    "standard_answer": "1,234,567 ÷ 100 = 12,345.67 元。贷款余额底层以分存储，查询转换为元。",
+    "evidence_sources": [{"source": "question_constraints", "locator": "用户给定 1,234,567 分"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]/definition, /expression"}],
+    "capability_labels": ["calculation_reasoning"], "intent_labels": ["query", "definition"],
+    "difficulty": "medium", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "M07",
+    "question": "产品甲逾期 20 万、余额 200 万；产品乙逾期 30 万、余额 300 万。合计逾期率和两个产品比率的简单平均是否相同？",
+    "standard_answer": "合计逾期率=(20万+30万)/(200万+300万)=10%。甲、乙各为 10%，本例简单平均也为 10%；相同是因为两组比率相等，一般仍应按分子分母加权计算。",
+    "evidence_sources": [{"source": "question_constraints", "locator": "用户给定两个产品的逾期本金与余额"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/expression"}],
+    "capability_labels": ["calculation_reasoning", "comparison_analysis"], "intent_labels": ["query", "compare"],
+    "difficulty": "medium", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "M08",
+    "question": "查上周每天的逾期率走势。",
+    "standard_answer": "需要明确“上周”的日期范围；本地合成数据只有 12 个月末快照和 2026-03-01/02 两日，不提供完整逐日走势，缺失日期的数值不可用。",
+    "evidence_sources": [{"source": "README.md", "locator": "本地合成数据范围说明"}],
+    "capability_labels": ["ambiguous_query", "factual_query"], "intent_labels": ["query", "clarify"],
+    "difficulty": "medium", "boundary_labels": ["time_ambiguity", "no_answer"], "expected_action": "clarify"
+  },
+  {
+    "id": "M09",
+    "question": "请按 demo-v1 和 demo-v2 两个版本分别给出逾期率口径；目录里没有的版本也按最新版本补一下。",
+    "standard_answer": "当前认证目录仅能确认 demo-v2；没有可核验的 demo-v1 逾期率版本内容，不能用最新口径补造历史版本。请提供旧版本材料或明确只查询 demo-v2。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/version, #/metrics[id=overdue_rate]"}],
+    "capability_labels": ["refusal", "ambiguous_query", "definition_explanation"], "intent_labels": ["definition", "version_compare", "clarify"],
+    "difficulty": "medium", "boundary_labels": ["version_conflict", "no_answer"], "expected_action": "clarify"
+  },
+  {
+    "id": "M10",
+    "question": "demo-operator 身份能查逾期率和逾期余额吗？",
+    "standard_answer": "不能。逾期率和逾期余额在认证目录中都只授权 analyst；operator 不满足权限，系统应拒绝返回定义、血缘和数值。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/roles, #/metrics[id=overdue_balance]/roles"}],
+    "capability_labels": ["refusal", "comparison_analysis"], "intent_labels": ["authorization", "compare"],
+    "difficulty": "medium", "boundary_labels": ["permission_boundary", "multi_intent"], "expected_action": "refuse"
+  },
+  {
+    "id": "M11",
+    "question": "M1+逾期率的认证口径是什么？",
+    "standard_answer": "当前认证目录没有 M1+ 逾期率定义，不能从金额逾期率推导或冒充认证口径；需要业务补充规则并提交指标认证。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics（无 M1+ 指标）"}],
+    "capability_labels": ["refusal", "definition_explanation"], "intent_labels": ["definition", "unsupported"],
+    "difficulty": "medium", "boundary_labels": ["no_answer"], "expected_action": "refuse"
+  },
+  {
+    "id": "M12",
+    "question": "还款金额不要算冲正、撤销，也别把利息罚息算进去，认证定义是什么？",
+    "standard_answer": "还款金额是业务日已入账还款事件的本金合计，按 repayment_id 去重；不含冲正、撤销、利息和罚息。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=repayment_amount]/definition"}],
+    "capability_labels": ["definition_explanation"], "intent_labels": ["definition"],
+    "difficulty": "medium", "boundary_labels": ["negation", "colloquial"], "expected_action": "answer"
+  },
+  {
+    "id": "M13",
+    "question": "余额跨好几天能不能直接加起来看总余额？",
+    "standard_answer": "不能。贷款余额是每日时点余额，跨日应保留日期维度或明确取某一时点，不能把每日余额相加当作期间总额。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]/definition, /time_kind"}],
+    "capability_labels": ["ambiguous_query", "definition_explanation"], "intent_labels": ["definition", "clarify"],
+    "difficulty": "medium", "boundary_labels": ["colloquial", "negation"], "expected_action": "answer"
+  },
+  {
+    "id": "M14",
+    "question": "逾期率咋算、用哪俩字段、上游从哪来？",
+    "standard_answer": "逾期率=逾期本金合计/剩余本金合计；字段为 overdue_balance_cents 与 loan_balance_cents；血缘为 bundle.loans → dwd_loan_snapshot → dws_credit_daily → ads_credit_daily。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/definition, /columns, /lineage"}],
+    "capability_labels": ["definition_explanation", "lineage_trace", "multi_hop_reasoning"], "intent_labels": ["definition", "field", "lineage"],
+    "difficulty": "medium", "boundary_labels": ["colloquial", "multi_intent"], "expected_action": "answer"
+  },
+  {
+    "id": "M15",
+    "question": "LOAN_NO 在东华、五维、元智汇、通联来源分别是否存在？",
+    "standard_answer": "FTM_AGT_LOAN.LOAN_NO 的来源可用性：东华 Y、五维 Y、元智汇 Y、通联 Y。",
+    "evidence_sources": [{"source": "credit/data/schema_catalog.json", "locator": "#/tables[id=FTM_AGT_LOAN]/fields[name_en=LOAN_NO]/source_availability"}],
+    "capability_labels": ["factual_query", "comparison_analysis"], "intent_labels": ["schema", "compare"],
+    "difficulty": "medium", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "M16",
+    "question": "当前结构字典一共收录多少张表？",
+    "standard_answer": "当前 schema_catalog.json 收录 17 张表。",
+    "evidence_sources": [{"source": "credit/data/schema_catalog.json", "locator": "#/tables（数组长度 17）"}],
+    "capability_labels": ["factual_query"], "intent_labels": ["schema"],
+    "difficulty": "medium", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "M17",
+    "question": "2026-03-03 的逾期率是多少？",
+    "standard_answer": "本地合成数据虽覆盖 12 个月份，但没有 2026-03-03 当日快照，因此无法提供该日数值；不能沿用前一天结果。",
+    "evidence_sources": [{"source": "README.md", "locator": "本地合成数据范围说明"}],
+    "capability_labels": ["factual_query", "refusal"], "intent_labels": ["query", "unsupported"],
+    "difficulty": "medium", "boundary_labels": ["no_answer", "time_ambiguity"], "expected_action": "refuse"
+  },
+  {
+    "id": "M18",
+    "question": "基础层规范 v1.9 和东华 2021-06-10 字典的权威关系是什么？",
+    "standard_answer": "当前结构语料标记光大信托基础层 v1.9 为 unified_base_layer_standard（统一规范），东华字典 2021-06-10 为 donghua_source_schema（来源结构）。不能把两者版本日期混为同一版本；发生规范冲突时应以基础层规范为准，东华字典用于核对源字段。",
+    "evidence_sources": [{"source": "credit/data/schema_catalog.json", "locator": "#/source_documents"}],
+    "capability_labels": ["comparison_analysis", "factual_query"], "intent_labels": ["schema", "version_compare"],
+    "difficulty": "medium", "boundary_labels": ["version_conflict"], "expected_action": "answer"
+  },
+  {
+    "id": "M19",
+    "question": "不要把 3 月 1 日和 2 日贷款余额相加；系统应该怎样返回？",
+    "standard_answer": "应分别按业务日期返回两个时点余额，或先澄清用户想看哪一天；不能求两日余额之和。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]/definition"}, {"source": "question_constraints", "locator": "明确排除跨日求和"}],
+    "capability_labels": ["ambiguous_query", "definition_explanation"], "intent_labels": ["query", "clarify"],
+    "difficulty": "medium", "boundary_labels": ["negation", "time_ambiguity"], "expected_action": "clarify"
+  },
+  {
+    "id": "M20",
+    "question": "FTM_AGT_LOAN 的 LOAN_NO 在表里是什么角色，并来自哪个源字典？",
+    "standard_answer": "LOAN_NO 是借据号、主键，来源工作表为“借据表”；相关结构语料包含东华数据字典，版本日期为 2021-06-10。",
+    "evidence_sources": [{"source": "credit/data/schema_catalog.json", "locator": "#/tables[id=FTM_AGT_LOAN]/fields[name_en=LOAN_NO], #/source_documents"}],
+    "capability_labels": ["multi_hop_reasoning", "factual_query"], "intent_labels": ["schema", "field", "catalog_lookup"],
+    "difficulty": "medium", "boundary_labels": ["multi_intent"], "expected_action": "answer"
+  },
+  {
+    "id": "H01",
+    "question": "上个月各渠道逾期率的数值、口径和上游表都给我，最好按日报趋势列出来。",
+    "standard_answer": "需先澄清上月的具体日期范围；认证目录未提供渠道维度，且本地数据只有 12 个月末快照与 2026-03-01/02 两日，无法生成上月渠道日报数值。可先提供已认证口径（业务日末逾期本金/剩余本金）和通用血缘（bundle.loans → dwd_loan_snapshot → dws_credit_daily → ads_credit_daily），但数值标为不可用，不可推断渠道结果。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/definition, /lineage"}, {"source": "README.md", "locator": "认证维度及本地合成数据范围说明"}],
+    "capability_labels": ["ambiguous_query", "multi_hop_reasoning", "lineage_trace", "definition_explanation", "refusal"], "intent_labels": ["query", "definition", "lineage", "clarify"],
+    "difficulty": "hard", "boundary_labels": ["time_ambiguity", "multi_intent", "no_answer"], "expected_action": "clarify",
+    "conversation_context": [{"role": "user", "question": "2026-03-02 REALTIME 贷款余额按产品查询"}],
+    "context_expectation": "显式新指标不能沿用旧指标/日期/状态；上月与渠道限制仍须分别说明"
+  },
+  {
+    "id": "H02",
+    "question": "甲产品两天逾期本金分别 10 万、20 万，余额 100 万、200 万；乙产品逾期本金 15 万、15 万，余额 300 万、300 万。求两天每个产品的逾期率和合计率，并说明不能怎样算。",
+    "standard_answer": "甲产品：(10+20)/(100+200)=10%；乙产品：(15+15)/(300+300)=5%；合计：(10+15+20+15)/(100+200+300+300)=60/900≈6.67%。合计率不能对每日或产品比率做未加权简单平均；应汇总逾期本金与余额后相除。",
+    "evidence_sources": [{"source": "question_constraints", "locator": "题目给定四组产品/日期金额"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/expression"}],
+    "capability_labels": ["calculation_reasoning", "comparison_analysis", "multi_hop_reasoning"], "intent_labels": ["query", "compare", "definition"],
+    "difficulty": "hard", "boundary_labels": ["multi_intent"], "expected_action": "answer"
+  },
+  {
+    "id": "H03",
+    "question": "A 组通过 72/90，B 组通过 45/60。分别是多少，谁高多少个百分点？",
+    "standard_answer": "A 组 72/90=80%；B 组 45/60=75%；A 组高 5 个百分点。两个百分率相差 5 个百分点，不是相对高 5%。",
+    "evidence_sources": [{"source": "question_constraints", "locator": "用户给定两组通过数和申请数"}, {"source": "credit/data/catalog.json", "locator": "#/metrics[id=approval_rate]/expression"}],
+    "capability_labels": ["calculation_reasoning", "comparison_analysis"], "intent_labels": ["query", "compare"],
+    "difficulty": "hard", "boundary_labels": [], "expected_action": "answer"
+  },
+  {
+    "id": "H04",
+    "question": "我看到基础层 v1.9 和东华 2021 版字段定义不一致，直接挑更新时间新的那个当规范，并合并成一个答案。",
+    "standard_answer": "不能仅按更新时间择一或合并冲突定义。当前元数据把基础层 v1.9 标记为统一规范、东华 2021-06-10 标记为来源结构；应以基础层规范作为业务标准并将差异列出。若要裁定具体冲突，需提供涉及的字段/原文版本证据。",
+    "evidence_sources": [{"source": "credit/data/schema_catalog.json", "locator": "#/source_documents"}],
+    "capability_labels": ["comparison_analysis", "refusal", "ambiguous_query"], "intent_labels": ["schema", "version_compare", "clarify"],
+    "difficulty": "hard", "boundary_labels": ["version_conflict", "colloquial"], "expected_action": "clarify"
+  },
+  {
+    "id": "H05",
+    "question": "我是 demo-visitor。别给我看逾期余额数值，只告诉我这个指标的口径、字段和血缘。",
+    "standard_answer": "拒绝提供逾期余额的口径、字段、血缘和数值。该指标在认证目录中仅授权 analyst；“不提供数值”的表述不能绕过对元数据本身的权限控制。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_balance]/roles, /columns, /lineage"}],
+    "capability_labels": ["refusal", "lineage_trace", "definition_explanation"], "intent_labels": ["authorization", "definition", "field", "lineage"],
+    "difficulty": "hard", "boundary_labels": ["permission_boundary", "negation", "multi_intent"], "expected_action": "refuse"
+  },
+  {
+    "id": "H06",
+    "question": "还款金额不要算冲正，但要把利息和罚息算进去，按认证口径给结果。",
+    "standard_answer": "该请求条件与认证定义冲突：认证还款金额只统计已入账本金，排除冲正、撤销、利息和罚息。不能把利息罚息加入后仍标为认证结果；请确认要认证本金口径还是申请新的非认证试算口径。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=repayment_amount]/definition"}],
+    "capability_labels": ["definition_explanation", "refusal", "ambiguous_query"], "intent_labels": ["definition", "clarify"],
+    "difficulty": "hard", "boundary_labels": ["negation", "version_conflict"], "expected_action": "clarify"
+  },
+  {
+    "id": "H07",
+    "question": "上月贷款余额给我一个数，按月末算还是整月平均你看着办。",
+    "standard_answer": "不能代替用户选择时点口径。贷款余额是时点指标，请确认要上月最后一个业务日余额，还是逐日余额序列/日均；同时需明确上月具体年月。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=loan_balance]/definition, /time_kind"}],
+    "capability_labels": ["ambiguous_query", "refusal"], "intent_labels": ["query", "clarify"],
+    "difficulty": "hard", "boundary_labels": ["time_ambiguity", "colloquial"], "expected_action": "clarify",
+    "conversation_context": [{"role": "user", "question": "2026-03-02 REALTIME 贷款余额按产品查询"}],
+    "context_expectation": "相对时间和月末/日均口径不能由模型代选，也不能沿用上一轮日期或数据状态"
+  },
+  {
+    "id": "H08",
+    "question": "Vintage 逾期率按放款月分 cohort、看 MOB3，给我公式和上游表；没有的话按业内常见定义补。",
+    "standard_answer": "当前系统没有认证 Vintage 指标定义或血缘，不能使用通用行业定义补成项目认证口径。需要业务确认 cohort 归属、MOB 计算、分子分母、观察时点及源表后，提交指标治理并认证；当前只能拒绝给出项目公式和上游表。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics（无 Vintage 指标）"}, {"source": "credit/data/exploration_metrics.json", "locator": "#/metrics[id=vintage_overdue_rate]（候选定义未满足运行条件）"}],
+    "capability_labels": ["refusal", "definition_explanation", "lineage_trace"], "intent_labels": ["definition", "lineage", "unsupported"],
+    "difficulty": "hard", "boundary_labels": ["no_answer", "multi_intent", "colloquial"], "expected_action": "refuse"
+  },
+  {
+    "id": "H09",
+    "question": "最近那几个产品的逾期表现咋样？口径和上游也顺便说下。",
+    "standard_answer": "需要澄清“最近”的具体日期范围，以及“逾期表现”指金额逾期率、逾期余额还是逾期笔数；当前认证逾期率只声明日期与产品维度，不支持据此推断其他维度。确认后可分别回答数值、认证口径和血缘。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/definition, /lineage"}, {"source": "README.md", "locator": "逾期率认证取数维度说明"}],
+    "capability_labels": ["ambiguous_query", "comparison_analysis", "lineage_trace", "definition_explanation"], "intent_labels": ["query", "compare", "definition", "lineage", "clarify"],
+    "difficulty": "hard", "boundary_labels": ["colloquial", "multi_intent", "time_ambiguity"], "expected_action": "clarify"
+  },
+  {
+    "id": "H10",
+    "question": "逾期率是不是不良率？不要猜；给我本项目两者的定义和监管依据。",
+    "standard_answer": "本项目已认证逾期率定义为业务日末逾期本金/剩余本金，并明确其不等同于不良率。当前认证目录没有本项目不良率定义，也没有监管依据材料，因此只能说明不等同，不能给出不良率公式或监管结论；需提供相应认证指标/监管文件。",
+    "evidence_sources": [{"source": "credit/data/catalog.json", "locator": "#/metrics[id=overdue_rate]/definition"}, {"source": "credit/data/catalog.json", "locator": "#/metrics（无不良率条目）"}],
+    "capability_labels": ["refusal", "comparison_analysis", "definition_explanation"], "intent_labels": ["compare", "definition", "unsupported"],
+    "difficulty": "hard", "boundary_labels": ["no_answer", "negation", "multi_intent"], "expected_action": "refuse"
+  }
+]

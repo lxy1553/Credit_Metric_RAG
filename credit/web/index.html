@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>信贷数仓 · 智能问数</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#172334;font:16px/1.6 system-ui,sans-serif}
+main{max-width:900px;margin:36px auto;padding:0 20px}.tag{color:#24665d;font-size:13px;letter-spacing:1px}
+h1{font-size:28px;margin:4px 0}p{color:#526174}.panel{background:white;border:1px solid #dae0e6;border-radius:14px;padding:20px;margin-top:16px}
+.top,.composer-actions{display:flex;gap:12px;align-items:center;justify-content:space-between}.top a{color:#205b52;font-size:13px}
+#conversation{height:min(55vh,520px);min-height:220px;overflow:auto;padding:8px 4px;display:flex;flex-direction:column;gap:14px}
+.message{max-width:92%;padding:12px 16px;border-radius:12px;overflow-wrap:anywhere}.message.user{align-self:flex-end;background:#205b52;color:white;white-space:pre-wrap}.message.assistant{align-self:flex-start;background:#f4f6f8;width:min(100%,760px)}
+.message.assistant h2{font-size:17px;margin:8px 0}.message.assistant p{margin:7px 0}.message .meta{font-size:12px;color:#647487}.message.user .meta{color:#d7e8e4}
+.answer-section{border-top:1px solid #dae0e6;padding-top:10px;margin-top:10px}.answer-section h3{font-size:15px;margin:5px 0}
+.noncertified{color:#9a5b19;font-weight:700}
+textarea,button{font:inherit;border-radius:8px;border:1px solid #c4ceda;padding:10px}textarea{display:block;width:100%;margin:10px 0;min-height:72px;resize:vertical}button{cursor:pointer;background:#205b52;color:white;border:0}button:disabled{opacity:.55;cursor:wait}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}th,td{text-align:left;border-bottom:1px solid #e0e5eb;padding:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:12px;border-radius:8px;font-size:12px}
+details{margin-top:10px}summary{cursor:pointer;color:#526174;font-size:13px}.warn{color:#9a5b19;font-size:13px}#loading{font-size:13px;color:#526174}footer{font-size:12px;color:#647487;margin-top:14px}
+@media(max-width:600px){main{margin:18px auto;padding:0 12px}.panel{padding:14px}h1{font-size:23px}.message{max-width:100%}}
+</style>
+<main>
+<div class="top"><div><div class="tag">CREDIT DATAHOUSE / LOCAL LAB <span id="retrieval">检索状态加载中…</span></div><h1>信贷智能问答</h1></div><a href="/docs">API 文档</a></div>
+<p>直接用自然语言提问，系统会识别问题并选择相应的数据或知识服务；支持连续追问。</p>
+<section class="panel" aria-label="问答窗口">
+  <div id="conversation" role="log" aria-live="polite" aria-label="问答内容"></div>
+  <form id="ask-form"><label for="question">输入你的问题</label><textarea id="question" required maxlength="1000" placeholder="例如：申请通过率怎么算？"></textarea><div class="composer-actions"><div><button type="submit" id="submit">发送</button> <button type="button" id="new-session">新会话</button></div><span id="loading" role="status"></span></div></form>
+</section>
+<footer>本地学习版 · 指标口径、字段定位、血缘、实时查询和追问均由服务端识别路由 · 使用合成信贷数据</footer>
+</main>
+<script>
+let session=crypto.randomUUID();
+let activeTaskId=null;
+const $=id=>document.getElementById(id);
+// This fixed identity is only for the local demo UI; production identity remains server-issued (SSO/JWT).
+const demoToken='demo-analyst';
+function element(tag,text){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node}
+function newMessage(kind){const node=element('article');node.className=`message ${kind}`;$('conversation').append(node);return node}
+function addWelcome(){const bubble=newMessage('assistant');bubble.append(element('p','你好，可以直接输入问题。我会根据问题内容选择合适的查询路径。'));}
+function appendRows(target,rows){if(!rows?.length)return;const table=element('table'),head=element('tr'),keys=Object.keys(rows[0]);keys.forEach(key=>head.append(element('th',key)));table.append(head);rows.forEach(row=>{const tr=element('tr');keys.forEach(key=>tr.append(element('td',typeof row[key]==='object'?JSON.stringify(row[key]):String(row[key]??'—'))));table.append(tr)});target.append(table)}
+function appendDetails(target,title,value){const details=element('details'),summary=element('summary',title);details.append(summary,element('pre',JSON.stringify(value,null,2)));target.append(details)}
+function renderSection(target,section){const card=element('section');card.className='answer-section';const meta=element('div',`${section.status}${section.data_status?` · ${section.data_status}`:''}`);meta.className='meta';card.append(meta,element('h3',section.title),element('p',section.message));appendRows(card,section.rows);(section.warnings||[]).forEach(w=>{const p=element('p',w);p.className='warn';card.append(p)});appendDetails(card,'本分项引用',section.citations);if(section.sql)appendDetails(card,'本分项查询 SQL',section.sql);target.append(card)}
+function render(data){
+ const bubble=newMessage('assistant');
+ const noncert=data.certification_status==='NON_CERTIFIED';
+ const meta=element('div',`${data.status}${data.data_status?` · ${data.data_status}`:''}${data.from_cache?' · 缓存命中':''}${noncert?' · 非认证试算':''}`);meta.className=`meta${noncert?' noncertified':''}`;bubble.append(meta);
+ bubble.append(element('h2',data.message));
+ if(data.sections?.length)data.sections.forEach(section=>renderSection(bubble,section));else appendRows(bubble,data.rows);
+ (data.warnings||[]).forEach(w=>{const p=element('p',w);p.className='warn';bubble.append(p)});
+ if(!data.sections?.length)appendDetails(bubble,'引用与数据来源',data.citations);
+ appendDetails(bubble,'查询与审计',{trace_id:data.trace_id,steps:data.steps,sql:data.sql});
+ $('conversation').scrollTop=$('conversation').scrollHeight;
+}
+function addUserMessage(question){const bubble=newMessage('user');bubble.textContent=question;$('conversation').scrollTop=$('conversation').scrollHeight}
+addWelcome();
+$('new-session').onclick=()=>{session=crypto.randomUUID();$('conversation').replaceChildren();addWelcome();$('loading').textContent='已开始新会话';$('question').focus()};
+fetch('/healthz').then(response=>response.json()).then(data=>{$('retrieval').textContent=`· ${data.retrieval}`}).catch(()=>{$('retrieval').textContent='· 检索状态不可用'});
+async function taskRequest(path,options={}){
+ const response=await fetch(path,{...options,headers:{'Authorization':`Bearer ${demoToken}`,...options.headers}});
+ if(response.status===204)return null;
+ const data=await response.json();if(!response.ok){const error=new Error(data.detail||'任务请求失败');error.status=response.status;throw error}return data;
+}
+const pause=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
+function formatTaskProgress(task){
+ const names={definition:'指标口径',lineage:'数据血缘',field:'字段定位',schema:'表结构',query:'指标查询',exploration:'非认证试算'};
+ const states={queued:'排队中',running:'处理中',ok:'已完成',unavailable:'暂不可用',needs_clarification:'待补充',no_data:'无数据',refused:'未授权',failed:'失败'};
+ const entries=Object.entries(task.intent_progress||{});
+ if(!entries.length)return task.status==='queued'?'任务排队中…':'正在处理问题…';
+ return entries.map(([intent,status])=>`${names[intent]||intent}${states[status]||status}`).join(' · ');
+}
+async function waitForQuestionTask(requestId,question){
+ const deadline=Date.now()+180000;let resumed=false;
+ while(Date.now()<deadline){
+  let task;
+  try{task=await taskRequest(`/v1/question-tasks/${encodeURIComponent(requestId)}`)}
+  catch(error){if(error instanceof TypeError){$('loading').textContent='服务连接中断，正在等待恢复…';await pause(1000);continue}throw error}
+  if(task.status==='completed'&&task.result)return task.result;
+  if(task.status==='interrupted'&&task.resume_required&&!resumed){
+   $('loading').textContent='任务中断，正在重新鉴权并恢复…';
+   await taskRequest(`/v1/question-tasks/${encodeURIComponent(requestId)}/resume`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,session_id:session})});
+   resumed=true;
+  }else if(['failed','interrupted','cancelled','expired'].includes(task.status)){
+   throw new Error(task.message||`任务状态：${task.status}`);
+  }else{
+   $('loading').textContent=formatTaskProgress(task);
+  }
+  await pause(400);
+ }
+ throw new Error('等待超时；任务仍可能在后台运行，可稍后使用 request_id 查询');
+}
+$('new-session').onclick=async()=>{if(activeTaskId){try{await taskRequest(`/v1/question-tasks/${encodeURIComponent(activeTaskId)}`,{method:'DELETE'})}catch{}}activeTaskId=null;session=crypto.randomUUID();$('conversation').replaceChildren();addWelcome();$('loading').textContent='已开始新会话';$('question').focus()};
+$('ask-form').onsubmit=async event=>{
+ event.preventDefault();const question=$('question').value.trim();if(!question)return;
+ addUserMessage(question);$('question').value='';$('submit').disabled=true;$('loading').textContent='正在提交异步任务…';
+ try{
+  let accepted;
+  try{accepted=await taskRequest('/v1/question-tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,session_id:session})})}
+  catch(error){
+   if(error.status!==404)throw error;
+   $('loading').textContent='当前服务尚未加载异步接口，使用兼容查询…';
+   const response=await fetch('/v1/questions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${demoToken}`},body:JSON.stringify({question,session_id:session})});
+   const result=await response.json();if(!response.ok)throw new Error(result.detail||'查询请求失败');render(result);$('loading').textContent='已完成（兼容模式）';return;
+  }
+  activeTaskId=accepted.request_id;$('loading').textContent=`任务已提交：${accepted.request_id}`;
+  const data=await waitForQuestionTask(accepted.request_id,question);render(data);$('loading').textContent='已完成';
+ }catch(error){const bubble=newMessage('assistant');const taskHint=activeTaskId?` request_id=${activeTaskId}`:'';bubble.append(element('p',`任务未完成：${error.message}${taskHint}`));$('loading').textContent='可重新提交问题继续处理'}
+ finally{activeTaskId=null;$('submit').disabled=false;$('question').focus()}
+};
+</script>
+</html>

@@ -1,0 +1,29 @@
+{
+  "version": "draft-v1",
+  "updated_at": "2026-10-14",
+  "source": "本地合成数据探索候选目录；未经业务认证",
+  "candidates": [
+    {
+      "id": "application_rejection_rate",
+      "name": "申请拒绝率",
+      "aliases": ["拒绝率", "申请未通过率"],
+      "status": "DRAFT",
+      "formula": "同一统计范围内（申请笔数－审批通过笔数）／申请笔数；分母为零返回空值",
+      "aggregation": "application_rejection_rate",
+      "source_dataset": "ads_credit_daily",
+      "source_fields": ["application_count", "approved_count"],
+      "owner": "待业务负责人确认"
+    },
+    {
+      "id": "vintage_overdue_rate",
+      "name": "Vintage 逾期率",
+      "aliases": ["逾期率的 Vintage", "逾期率vintage", "逾期率 vintage", "vintage逾期率", "vintage overdue rate"],
+      "status": "DRAFT",
+      "formula": "同一放款月份 cohort、MOB 和观察日内，逾期天数超过宽限期 3 天的逾期本金合计 / 原始放款金额合计；MOB = 观察月份与放款月份的日历月差",
+      "aggregation": "vintage_overdue_rate",
+      "source_dataset": "exploration_vintage_snapshot",
+      "source_fields": ["snapshot_date", "cohort_month", "disburse_date", "mob", "overdue_days", "overdue_principal_cents", "disbursed_amount_cents", "domain", "data_status"],
+      "owner": "待业务负责人确认；仅用于本地合成样例试算"
+    }
+  ]
+}

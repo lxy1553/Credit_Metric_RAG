@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "datahouse-credit"
+version = "0.1.0"
+description = "Governed credit warehouse and controlled question answering learning project"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi==0.115.6", "uvicorn>=0.32,<1", "langgraph==1.2.11",
+  "sqlglot==30.18.0", "httpx==0.28.1", "redis>=5,<7", "cryptography>=46,<51",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.9,<1", "beautifulsoup4>=4.12,<5"]
+rag = ["fastembed==0.8.0"]
+auth = ["PyJWT[crypto]>=2.10,<3"]
+spark = ["pyspark==3.5.6"]
+kafka = ["kafka-python>=2.0.2,<3"]
+knowledge-source = ["openpyxl>=3.1,<4"]
+
+[project.scripts]
+credit-demo = "credit.demo:main"
+credit-warehouse = "credit.warehouse:main"
+credit-eval = "credit.evaluation:main"
+credit-index = "credit.search_index:main"
+credit-retrieval-eval = "credit.retrieval_evaluation:main"
+credit-release-preflight = "credit.release_preflight:main"
+credit-spark-batch = "credit.spark_batch:main"
+credit-rag-eval = "credit.rag_evaluation:main"
+credit-qa-eval = "credit.qa_evaluation:main"
+credit-kafka-produce = "credit.kafka_events:produce_main"
+credit-kafka-consume = "credit.kafka_events:consume_main"
+credit-flink-deploy = "credit.flink_job:main"
+
+[tool.setuptools.packages.find]
+include = ["credit*"]
+
+[tool.setuptools.package-data]
+credit = ["*.sql", "data/*.json", "data/*.jsonl", "web/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501", "B008"]

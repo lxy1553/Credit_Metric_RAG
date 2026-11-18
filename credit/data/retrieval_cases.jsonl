@@ -1,0 +1,16 @@
+{"query":"申请通过率如何计算","expected":["approval_rate"],"token":"demo-visitor","forbidden":[]}
+{"query":"贷款余额的口径是什么","expected":["loan_balance"],"token":"demo-visitor","forbidden":[]}
+{"query":"目前还剩多少贷款本金","expected":["loan_balance"],"token":"demo-analyst","forbidden":[]}
+{"query":"逾期本金余额是多少","expected":["overdue_balance"],"token":"demo-analyst","forbidden":[]}
+{"query":"新增申请数量","expected":["application_count"],"token":"demo-operator","forbidden":[]}
+{"query":"批准了多少笔申请","expected":["approved_count"],"token":"demo-operator","forbidden":[]}
+{"query":"已经收回多少本金","expected":["repayment_amount"],"token":"demo-analyst","forbidden":[]}
+{"query":"在贷借据有多少笔","expected":["loan_count"],"token":"demo-operator","forbidden":[]}
+{"query":"贷款余额来自哪些表","expected":["loan_balance"],"token":"demo-analyst","forbidden":[]}
+{"query":"业务日期字段是什么意思","expected":["field:biz_date"],"token":"demo-operator","forbidden":[]}
+{"query":"逾期率定义","expected":[],"token":"demo-visitor","forbidden":["overdue_rate","overdue_balance","field:overdue_balance_cents"]}
+{"query":"逾期本金","expected":[],"token":"demo-operator","forbidden":["overdue_rate","overdue_balance","field:overdue_balance_cents"]}
+{"query":"FTM_AGT_LOAN表结构","expected":["schema:base:FTM_AGT_LOAN"],"expected_kinds":["schema_table"],"token":"demo-analyst","forbidden":[]}
+{"query":"LOAN_NO字段类型","expected":["schema:base:FTM_AGT_LOAN:LOAN_NO"],"expected_kinds":["schema_field"],"token":"demo-operator","forbidden":[]}
+{"query":"FTM_AGT_LOAN对应东华源表","expected":["schema:base:FTM_AGT_LOAN"],"expected_kinds":["schema_table"],"token":"demo-analyst","forbidden":[]}
+{"query":"FTM_AGT_LOAN表结构","expected":[],"token":"demo-visitor","forbidden":["schema:base:FTM_AGT_LOAN"]}

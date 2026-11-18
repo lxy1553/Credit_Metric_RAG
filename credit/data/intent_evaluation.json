@@ -1,0 +1,176 @@
+[
+  {
+    "id": "single-definition-overdue",
+    "category": "single_intent",
+    "question": "逾期率如何计算？",
+    "expected_intents": ["definition"]
+  },
+  {
+    "id": "single-definition-approval",
+    "category": "single_intent",
+    "question": "申请通过率的分子、分母和统计口径是什么？",
+    "expected_intents": ["definition"]
+  },
+  {
+    "id": "single-field-balance",
+    "category": "single_intent",
+    "question": "贷款余额对应哪个字段？",
+    "expected_intents": ["field"]
+  },
+  {
+    "id": "single-schema-table",
+    "category": "single_intent",
+    "question": "FTM_AGT_LOAN 表有哪些字段？",
+    "expected_intents": ["schema"]
+  },
+  {
+    "id": "single-lineage-repayment",
+    "category": "single_intent",
+    "question": "还款金额的上游表有哪些？",
+    "expected_intents": ["lineage"]
+  },
+  {
+    "id": "single-query-final",
+    "category": "single_intent",
+    "question": "2026-03-02 FINAL 逾期率是多少？",
+    "expected_intents": ["query"]
+  },
+  {
+    "id": "single-query-realtime",
+    "category": "single_intent",
+    "question": "2026-03-02 实时逾期率是多少？",
+    "expected_intents": ["query"]
+  },
+  {
+    "id": "explicit-isolated-exploration",
+    "category": "exploration_opt_in",
+    "question": "请在隔离探索模式下试算 2026-03-01 申请拒绝率",
+    "expected_intents": ["exploration"]
+  },
+  {
+    "id": "multi-definition-lineage",
+    "category": "multi_intent",
+    "question": "逾期率如何计算，数据从哪些表来？",
+    "expected_intents": ["definition", "lineage"]
+  },
+  {
+    "id": "multi-query-definition-lineage",
+    "category": "multi_intent",
+    "question": "上月各产品逾期率是多少，口径及上游表是什么？",
+    "expected_intents": ["definition", "lineage", "query"]
+  },
+  {
+    "id": "multi-definition-field",
+    "category": "multi_intent",
+    "question": "申请通过率怎么算，使用哪个字段？",
+    "expected_intents": ["definition", "field"]
+  },
+  {
+    "id": "date-scoped-lineage",
+    "category": "single_intent",
+    "question": "2026-03-02 逾期率的上游表有哪些？",
+    "expected_intents": ["lineage"]
+  },
+  {
+    "id": "unknown-vintage-definition-lineage",
+    "category": "unknown_metric",
+    "question": "Vintage 逾期率怎么算，血缘是什么？",
+    "expected_intents": ["definition", "lineage"]
+  },
+  {
+    "id": "unknown-m1-definition",
+    "category": "unknown_metric",
+    "question": "M1+逾期率的口径如何计算？",
+    "expected_intents": ["definition"]
+  },
+  {
+    "id": "unknown-metric-value",
+    "category": "unknown_metric",
+    "question": "2026-03-02 vintage 逾期率数值是多少？",
+    "expected_intents": ["query"]
+  },
+  {
+    "id": "unsupported-movie",
+    "category": "unsupported",
+    "question": "推荐一部适合周末看的电影。",
+    "expected_intents": ["other"]
+  },
+  {
+    "id": "unsupported-weather",
+    "category": "unsupported",
+    "question": "今天天气怎么样？",
+    "expected_intents": ["other"]
+  },
+  {
+    "id": "unsupported-chat",
+    "category": "unsupported",
+    "question": "你好，能介绍一下你自己吗？",
+    "expected_intents": ["other"]
+  },
+  {
+    "id": "unsupported-unrelated-sql",
+    "category": "unsupported",
+    "question": "请帮我写一个递归遍历目录的 SQL 教程。",
+    "expected_intents": ["other"]
+  },
+  {
+    "id": "implicit-definition-numerator-denominator",
+    "category": "colloquial_hard",
+    "question": "逾期率的分子和分母分别取什么？",
+    "expected_intents": ["definition"]
+  },
+  {
+    "id": "implicit-query-product-performance",
+    "category": "colloquial_hard",
+    "question": "给我看看各产品的逾期率表现。",
+    "expected_intents": ["query"]
+  },
+  {
+    "id": "implicit-lineage-source-location",
+    "category": "colloquial_hard",
+    "question": "逾期率涉及的源数据都从哪里来？",
+    "expected_intents": ["lineage"]
+  },
+  {
+    "id": "implicit-query-trend",
+    "category": "colloquial_hard",
+    "question": "最近一周每日逾期率走势如何？",
+    "expected_intents": ["query"]
+  },
+  {
+    "id": "unknown-query-and-definition",
+    "category": "unknown_metric",
+    "question": "各渠道 M1+ 逾期率数值和计算口径是什么？",
+    "expected_intents": ["definition", "query"]
+  },
+  {
+    "id": "unsupported-creative-writing",
+    "category": "unsupported",
+    "question": "请用贷款和月亮写一首生日祝福诗。",
+    "expected_intents": ["other"]
+  },
+  {
+    "id": "supplied-approval-calculation",
+    "category": "supplied_value_calculation",
+    "question": "100 笔申请中通过 60 笔，申请通过率是多少？",
+    "expected_intents": ["calculation"]
+  },
+  {
+    "id": "supplied-overdue-calculation",
+    "category": "supplied_value_calculation",
+    "question": "逾期本金 75 万、剩余本金 1000 万，逾期率是多少？",
+    "expected_intents": ["calculation"]
+  },
+  {
+    "id": "metric-keyword-creative-request",
+    "category": "out_of_scope_with_metric",
+    "question": "请用逾期率写一首诗",
+    "expected_intents": ["other"]
+  },
+  {
+    "id": "bare-metric-name",
+    "category": "ambiguous",
+    "question": "逾期率",
+    "expected_intents": ["other"]
+  }
+]
